@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: novawallet-postgres
+    environment:
+      POSTGRES_DB: novawallet
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - novawallet-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d novawallet"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: NovaWallet.API/Dockerfile
+    container_name: novawallet-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__NovaWalletDb: "Host=postgres;Port=5432;Database=novawallet;Username=postgres;Password=postgres"
+      Jwt__Issuer: "NovaWallet.MockIssuer"
+      Jwt__Audience: "NovaWallet.API"
+      Jwt__SigningKey: "novawallet-dev-signing-key-change-me-32chars"
+    ports:
+      - "8080:8080"
+
+volumes:
+  novawallet-postgres-data:

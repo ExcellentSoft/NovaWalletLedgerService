@@ -1,11 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "nf8PIjQXGWY=",
+  "dgSpecHash": "h9o5urGDFhQ=",
   "success": true,
   "projectFilePath": "C:\\Users\\HowCode\\source\\repos\\ExcellentSoft\\NovaWalletLedgerService\\NovaPayWallet\\NovaWallet.API\\NovaWallet.API.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\HowCode\\.nuget\\packages\\mediatr\\14.2.0\\mediatr.14.2.0.nupkg.sha512",
     "C:\\Users\\HowCode\\.nuget\\packages\\mediatr.contracts\\2.0.1\\mediatr.contracts.2.0.1.nupkg.sha512",
+    "C:\\Users\\HowCode\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\9.0.9\\microsoft.aspnetcore.authentication.jwtbearer.9.0.9.nupkg.sha512",
     "C:\\Users\\HowCode\\.nuget\\packages\\microsoft.aspnetcore.openapi\\9.0.17\\microsoft.aspnetcore.openapi.9.0.17.nupkg.sha512",
     "C:\\Users\\HowCode\\.nuget\\packages\\microsoft.entityframeworkcore\\9.0.1\\microsoft.entityframeworkcore.9.0.1.nupkg.sha512",
     "C:\\Users\\HowCode\\.nuget\\packages\\microsoft.entityframeworkcore.abstractions\\9.0.1\\microsoft.entityframeworkcore.abstractions.9.0.1.nupkg.sha512",
@@ -25,11 +26,14 @@
     "C:\\Users\\HowCode\\.nuget\\packages\\microsoft.identitymodel.abstractions\\8.14.0\\microsoft.identitymodel.abstractions.8.14.0.nupkg.sha512",
     "C:\\Users\\HowCode\\.nuget\\packages\\microsoft.identitymodel.jsonwebtokens\\8.14.0\\microsoft.identitymodel.jsonwebtokens.8.14.0.nupkg.sha512",
     "C:\\Users\\HowCode\\.nuget\\packages\\microsoft.identitymodel.logging\\8.14.0\\microsoft.identitymodel.logging.8.14.0.nupkg.sha512",
+    "C:\\Users\\HowCode\\.nuget\\packages\\microsoft.identitymodel.protocols\\8.0.1\\microsoft.identitymodel.protocols.8.0.1.nupkg.sha512",
+    "C:\\Users\\HowCode\\.nuget\\packages\\microsoft.identitymodel.protocols.openidconnect\\8.0.1\\microsoft.identitymodel.protocols.openidconnect.8.0.1.nupkg.sha512",
     "C:\\Users\\HowCode\\.nuget\\packages\\microsoft.identitymodel.tokens\\8.14.0\\microsoft.identitymodel.tokens.8.14.0.nupkg.sha512",
     "C:\\Users\\HowCode\\.nuget\\packages\\microsoft.openapi\\1.6.17\\microsoft.openapi.1.6.17.nupkg.sha512",
     "C:\\Users\\HowCode\\.nuget\\packages\\npgsql\\9.0.3\\npgsql.9.0.3.nupkg.sha512",
     "C:\\Users\\HowCode\\.nuget\\packages\\npgsql.entityframeworkcore.postgresql\\9.0.4\\npgsql.entityframeworkcore.postgresql.9.0.4.nupkg.sha512",
-    "C:\\Users\\HowCode\\.nuget\\packages\\system.diagnostics.diagnosticsource\\10.0.0\\system.diagnostics.diagnosticsource.10.0.0.nupkg.sha512"
+    "C:\\Users\\HowCode\\.nuget\\packages\\system.diagnostics.diagnosticsource\\10.0.0\\system.diagnostics.diagnosticsource.10.0.0.nupkg.sha512",
+    "C:\\Users\\HowCode\\.nuget\\packages\\system.identitymodel.tokens.jwt\\8.2.1\\system.identitymodel.tokens.jwt.8.2.1.nupkg.sha512"
   ],
   "logs": []
 }

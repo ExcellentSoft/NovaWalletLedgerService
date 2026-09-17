@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NovaWallet.Application.Common;
 using NovaWallet.Application.Dtos;
@@ -6,6 +7,7 @@ using NovaWallet.Application.Interfaces;
 namespace NovaWallet.API.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/wallets")]
 public class WalletsController(IWalletService walletService) : ControllerBase
 {
@@ -81,8 +83,4 @@ public class WalletsController(IWalletService walletService) : ControllerBase
     }
 }
 
-/// <summary>Request body for crediting a wallet (WalletId comes from the route).</summary>
-public record CreditWalletBody(long AmountKobo, string? Reference = null);
 
-/// <summary>Request body for a transfer (IdempotencyKey comes from the Idempotency-Key header).</summary>
-public record TransferBody(Guid FromWalletId, Guid ToWalletId, long AmountKobo, string? Reference = null);
