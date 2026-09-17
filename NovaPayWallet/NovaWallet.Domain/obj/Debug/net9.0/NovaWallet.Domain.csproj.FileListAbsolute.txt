@@ -1,0 +1,12 @@
+C:\Users\HowCode\source\repos\ExcellentSoft\NovaWalletLedgerService\NovaPayWallet\NovaWallet.Domain\bin\Debug\net9.0\NovaWallet.Domain.deps.json
+C:\Users\HowCode\source\repos\ExcellentSoft\NovaWalletLedgerService\NovaPayWallet\NovaWallet.Domain\bin\Debug\net9.0\NovaWallet.Domain.dll
+C:\Users\HowCode\source\repos\ExcellentSoft\NovaWalletLedgerService\NovaPayWallet\NovaWallet.Domain\bin\Debug\net9.0\NovaWallet.Domain.pdb
+C:\Users\HowCode\source\repos\ExcellentSoft\NovaWalletLedgerService\NovaPayWallet\NovaWallet.Domain\obj\Debug\net9.0\NovaWallet.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\HowCode\source\repos\ExcellentSoft\NovaWalletLedgerService\NovaPayWallet\NovaWallet.Domain\obj\Debug\net9.0\NovaWallet.Domain.AssemblyInfoInputs.cache
+C:\Users\HowCode\source\repos\ExcellentSoft\NovaWalletLedgerService\NovaPayWallet\NovaWallet.Domain\obj\Debug\net9.0\NovaWallet.Domain.AssemblyInfo.cs
+C:\Users\HowCode\source\repos\ExcellentSoft\NovaWalletLedgerService\NovaPayWallet\NovaWallet.Domain\obj\Debug\net9.0\NovaWallet.Domain.csproj.CoreCompileInputs.cache
+C:\Users\HowCode\source\repos\ExcellentSoft\NovaWalletLedgerService\NovaPayWallet\NovaWallet.Domain\obj\Debug\net9.0\NovaWallet.Domain.sourcelink.json
+C:\Users\HowCode\source\repos\ExcellentSoft\NovaWalletLedgerService\NovaPayWallet\NovaWallet.Domain\obj\Debug\net9.0\NovaWallet.Domain.dll
+C:\Users\HowCode\source\repos\ExcellentSoft\NovaWalletLedgerService\NovaPayWallet\NovaWallet.Domain\obj\Debug\net9.0\refint\NovaWallet.Domain.dll
+C:\Users\HowCode\source\repos\ExcellentSoft\NovaWalletLedgerService\NovaPayWallet\NovaWallet.Domain\obj\Debug\net9.0\NovaWallet.Domain.pdb
+C:\Users\HowCode\source\repos\ExcellentSoft\NovaWalletLedgerService\NovaPayWallet\NovaWallet.Domain\obj\Debug\net9.0\ref\NovaWallet.Domain.dll

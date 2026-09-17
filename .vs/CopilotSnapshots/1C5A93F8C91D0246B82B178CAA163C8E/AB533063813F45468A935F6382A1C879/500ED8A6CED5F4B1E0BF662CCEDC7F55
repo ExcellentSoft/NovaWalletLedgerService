@@ -1,0 +1,39 @@
+﻿namespace NovaWallet.Infrastructure.Persistence;
+
+using NovaWallet.Infrastructure.Repositories;
+
+public class UnitOfWork : IUnitOfWork
+{
+    private readonly NovaWalletDbContext _dbContext;
+
+    //private IWalletRepository? _wallets;
+    //private IWalletTransactionRepository? _walletTransactions;
+    //private IAuditLogRepository? _auditLogs;
+    //private IIdempotencyRecordRepository? _idempotencyRecords;
+    //private IDailyTransferUsageRepository? _dailyTransferUsages;
+
+    public UnitOfWork(NovaWalletDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+
+    public IWalletRepository Wallets =>  new WalletRepository(_dbContext);
+
+    public IWalletTransactionRepository WalletTransactions =>  new WalletTransactionRepository(_dbContext);
+
+    public IAuditLogRepository AuditLogs =>  new AuditLogRepository(_dbContext);
+
+    public IIdempotencyRecordRepository IdempotencyRecords =>   new IdempotencyRecordRepository(_dbContext);
+
+    public IDailyTransferUsageRepository DailyTransferUsages =>  new DailyTransferUsageRepository(_dbContext);
+
+    public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        return _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        return _dbContext.DisposeAsync();
+    }
+}

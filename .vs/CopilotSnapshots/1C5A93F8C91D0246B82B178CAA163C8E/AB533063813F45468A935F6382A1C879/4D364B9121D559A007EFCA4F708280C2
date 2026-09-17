@@ -1,0 +1,48 @@
+﻿namespace NovaWallet.Infrastructure.Persistence;
+
+using NovaWallet.Domain.Entities;
+using NovaWallet.Infrastructure.Repositories;
+
+public interface IUnitOfWork : IAsyncDisposable
+{
+    IWalletRepository Wallets { get; }
+    IWalletTransactionRepository WalletTransactions { get; }
+    IAuditLogRepository AuditLogs { get; }
+    IIdempotencyRecordRepository IdempotencyRecords { get; }
+    IDailyTransferUsageRepository DailyTransferUsages { get; }
+
+    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Runs <paramref name="operation"/> inside a database transaction (using the provider's
+    /// execution strategy so it composes with connection retries), committing on success and
+    /// rolling back if an exception is thrown.
+    /// </summary>
+    Task ExecuteInTransactionAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Loads the given wallets and takes a row-level (SELECT ... FOR UPDATE) lock on them for the
+    /// duration of the current transaction, in a deterministic ascending-Id order to avoid deadlocks
+    /// between concurrent multi-wallet operations (e.g. transfers). Must be called within a transaction
+    /// started by <see cref="ExecuteInTransactionAsync"/>.
+    /// </summary>
+    Task<IReadOnlyList<Wallet>> LockWalletsAsync(IReadOnlyCollection<Guid> walletIds, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets (creating if necessary) the daily transfer usage row for a wallet/date, taking a row-level
+    /// lock so concurrent transfers against the same wallet on the same day are serialized when
+    /// checking/incrementing the daily outbound transfer limit.
+    /// </summary>
+    Task<DailyTransferUsage> GetOrCreateDailyUsageForUpdateAsync(Guid walletId, DateOnly usageDate, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Attempts to atomically claim an Idempotency-Key for a new operation. See <see cref="IdempotencyClaimStatus"/>
+    /// for the possible outcomes the caller must handle.
+    /// </summary>
+    Task<IdempotencyClaim> ClaimIdempotencyKeyAsync(string key, string requestHash, CancellationToken cancellationToken = default);
+
+    Task CompleteIdempotencyKeyAsync(string key, string responsePayload, CancellationToken cancellationToken = default);
+
+    Task FailIdempotencyKeyAsync(string key, CancellationToken cancellationToken = default);
+}
+

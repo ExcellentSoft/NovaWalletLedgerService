@@ -1,0 +1,10 @@
+﻿using NovaWallet.Domain.Entities;
+
+namespace NovaWallet.Infrastructure.Persistence.Repositories;
+
+public interface IIdempotencyRecordRepository
+{
+    Task<IdempotencyRecord?> GetByKeyAsync(string key, CancellationToken cancellationToken = default);
+    Task AddAsync(IdempotencyRecord record, CancellationToken cancellationToken = default);
+    void Update(IdempotencyRecord record);
+}

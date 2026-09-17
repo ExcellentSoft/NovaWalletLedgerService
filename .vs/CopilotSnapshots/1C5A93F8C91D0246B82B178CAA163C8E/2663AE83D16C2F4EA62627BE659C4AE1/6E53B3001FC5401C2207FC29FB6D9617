@@ -1,0 +1,22 @@
+﻿using Microsoft.EntityFrameworkCore;
+using NovaWallet.Domain.Entities;
+
+namespace NovaWallet.Infrastructure.Persistence.Repositories;
+
+public class AuditLogRepository(NovaWalletDbContext dbContext) : IAuditLogRepository
+{
+    private readonly NovaWalletDbContext _dbContext = dbContext;
+
+    public async Task<IReadOnlyList<AuditLog>> GetByEntityIdAsync(Guid entityId, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.AuditLogs
+            .Where(a => a.EntityId == entityId)
+            .OrderByDescending(a => a.CreatedAtUtc)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task AddAsync(AuditLog auditLog, CancellationToken cancellationToken = default)
+    {
+        await _dbContext.AuditLogs.AddAsync(auditLog, cancellationToken);
+    }
+}

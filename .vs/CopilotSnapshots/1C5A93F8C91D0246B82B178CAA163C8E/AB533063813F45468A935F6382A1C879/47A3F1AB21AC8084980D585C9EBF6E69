@@ -1,0 +1,347 @@
+﻿using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using NovaWallet.Application.Common;
+using NovaWallet.Application.Dtos;
+using NovaWallet.Application.Interfaces;
+using NovaWallet.Application.Options;
+using NovaWallet.Domain.Entities;
+using NovaWallet.Domain.Enums;
+using NovaWallet.Domain.Exceptions;
+using NovaWallet.Infrastructure.Persistence;
+
+namespace NovaWallet.Application.Services;
+
+public class WalletService : IWalletService
+{
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly WalletOptions _options;
+    private readonly ILogger<WalletService> _logger;
+
+    public WalletService(IUnitOfWork unitOfWork, IOptions<WalletOptions> options, ILogger<WalletService> logger)
+    {
+        _unitOfWork = unitOfWork;
+        _options = options.Value;
+        _logger = logger;
+    }
+
+    public async Task<Result<WalletDto>> CreateWalletAsync(CreateWalletRequest request, CancellationToken cancellationToken = default)
+    {
+        if (request.CustomerId == Guid.Empty)
+        {
+            return Result<WalletDto>.Failure(ErrorType.Validation, "CustomerId is required.");
+        }
+
+        // One active wallet per customer/currency avoids ambiguous "which wallet do I credit" scenarios.
+        var existing = await _unitOfWork.Wallets.GetByOwnerIdAsync(request.CustomerId, cancellationToken);
+        if (existing is not null)
+        {
+            return Result<WalletDto>.Failure(ErrorType.Conflict, "A wallet already exists for this customer.");
+        }
+
+        var wallet = new Wallet(request.CustomerId, request.Currency);
+
+        await _unitOfWork.Wallets.AddAsync(wallet, cancellationToken);
+        await _unitOfWork.AuditLogs.AddAsync(CreateAuditLog(wallet.Id, AuditOperation.Created, new { wallet.OwnerId, wallet.Currency, BalanceKobo = wallet.Balance }), cancellationToken);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Result<WalletDto>.Success(ToDto(wallet));
+    }
+
+    public async Task<Result<WalletBalanceDto>> GetBalanceAsync(Guid walletId, CancellationToken cancellationToken = default)
+    {
+        var wallet = await _unitOfWork.Wallets.GetByIdAsync(walletId, cancellationToken);
+        if (wallet is null)
+        {
+            return Result<WalletBalanceDto>.Failure(ErrorType.NotFound, "Wallet not found.");
+        }
+
+        return Result<WalletBalanceDto>.Success(new WalletBalanceDto(
+            wallet.Id,
+            wallet.Balance,
+            KoboToNaira(wallet.Balance),
+            wallet.Currency));
+    }
+
+    public async Task<Result<TransactionDto>> CreditWalletAsync(CreditWalletRequest request, CancellationToken cancellationToken = default)
+    {
+        if (request.AmountKobo <= 0)
+        {
+            return Result<TransactionDto>.Failure(ErrorType.Validation, "Credit amount must be positive.");
+        }
+
+        Result<TransactionDto>? result = null;
+
+        await _unitOfWork.ExecuteInTransactionAsync(async ct =>
+        {
+            var wallets = await _unitOfWork.LockWalletsAsync(new[] { request.WalletId }, ct);
+            var wallet = wallets.FirstOrDefault();
+
+            if (wallet is null)
+            {
+                result = Result<TransactionDto>.Failure(ErrorType.NotFound, "Wallet not found.");
+                return;
+            }
+
+            if (!wallet.IsActive)
+            {
+                result = Result<TransactionDto>.Failure(ErrorType.Validation, "Wallet is not active.");
+                return;
+            }
+
+            var balanceBefore = wallet.Balance;
+            wallet.Credit(request.AmountKobo);
+            _unitOfWork.Wallets.Update(wallet);
+
+            var transaction = new WalletTransaction(
+                Guid.NewGuid(),
+                wallet.Id,
+                TransactionType.Deposit,
+                request.AmountKobo,
+                wallet.Currency,
+                reference: request.Reference);
+            transaction.MarkCompleted();
+
+            await _unitOfWork.WalletTransactions.AddAsync(transaction, ct);
+
+            await _unitOfWork.AuditLogs.AddAsync(CreateAuditLog(
+                wallet.Id,
+                AuditOperation.Credited,
+                new { AmountKobo = request.AmountKobo, BalanceBeforeKobo = balanceBefore, BalanceAfterKobo = wallet.Balance, request.Reference }), ct);
+
+            await _unitOfWork.SaveChangesAsync(ct);
+
+            result = Result<TransactionDto>.Success(ToDto(transaction));
+        }, cancellationToken);
+
+        return result!;
+    }
+
+    public async Task<Result<TransferResponse>> TransferAsync(TransferRequest request, CancellationToken cancellationToken = default)
+    {
+        var validationError = ValidateTransferRequest(request);
+        if (validationError is not null)
+        {
+            return Result<TransferResponse>.Failure(ErrorType.Validation, validationError);
+        }
+
+        var requestHash = ComputeRequestHash(request);
+
+        var claim = await _unitOfWork.ClaimIdempotencyKeyAsync(request.IdempotencyKey, requestHash, cancellationToken);
+
+        switch (claim.Status)
+        {
+            case IdempotencyClaimStatus.PayloadMismatch:
+                return Result<TransferResponse>.Failure(
+                    ErrorType.Conflict,
+                    "The Idempotency-Key has already been used with a different request payload.");
+
+            case IdempotencyClaimStatus.InProgress:
+                return Result<TransferResponse>.Failure(
+                    ErrorType.Conflict,
+                    "A request with this Idempotency-Key is already being processed.");
+
+            case IdempotencyClaimStatus.CompletedReplay:
+                var cached = JsonSerializer.Deserialize<TransferResponse>(claim.CachedResponsePayload!)
+                    ?? throw new InvalidOperationException("Corrupt cached idempotency response payload.");
+                return Result<TransferResponse>.Success(cached);
+        }
+
+        // claim.Status == Claimed: this caller owns processing this key; proceed.
+        try
+        {
+            var response = await ProcessTransferAsync(request, cancellationToken);
+            var payload = JsonSerializer.Serialize(response);
+            await _unitOfWork.CompleteIdempotencyKeyAsync(request.IdempotencyKey, payload, cancellationToken);
+            return Result<TransferResponse>.Success(response);
+        }
+        catch (DomainException ex)
+        {
+            await _unitOfWork.FailIdempotencyKeyAsync(request.IdempotencyKey, cancellationToken);
+            return ex switch
+            {
+                InsufficientFundsException => Result<TransferResponse>.Failure(ErrorType.Validation, ex.Message),
+                DailyTransferLimitExceededException => Result<TransferResponse>.Failure(ErrorType.Validation, ex.Message),
+                _ => Result<TransferResponse>.Failure(ErrorType.Validation, ex.Message)
+            };
+        }
+        catch (WalletNotFoundException ex)
+        {
+            await _unitOfWork.FailIdempotencyKeyAsync(request.IdempotencyKey, cancellationToken);
+            return Result<TransferResponse>.Failure(ErrorType.NotFound, ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error processing transfer for Idempotency-Key {IdempotencyKey}", request.IdempotencyKey);
+            await _unitOfWork.FailIdempotencyKeyAsync(request.IdempotencyKey, cancellationToken);
+            return Result<TransferResponse>.Failure(ErrorType.Unexpected, "An unexpected error occurred while processing the transfer.");
+        }
+    }
+
+    public async Task<Result<PagedResult<TransactionDto>>> GetStatementAsync(GetStatementRequest request, CancellationToken cancellationToken = default)
+    {
+        if (request.Page < 1 || request.PageSize is < 1 or > 200)
+        {
+            return Result<PagedResult<TransactionDto>>.Failure(ErrorType.Validation, "Invalid page or pageSize.");
+        }
+
+        var wallet = await _unitOfWork.Wallets.GetByIdAsync(request.WalletId, cancellationToken);
+        if (wallet is null)
+        {
+            return Result<PagedResult<TransactionDto>>.Failure(ErrorType.NotFound, "Wallet not found.");
+        }
+
+        var (items, totalCount) = await _unitOfWork.WalletTransactions.GetPagedByWalletIdAsync(
+            request.WalletId, request.Page, request.PageSize, cancellationToken);
+
+        var dtoItems = items.Select(ToDto).ToList();
+
+        return Result<PagedResult<TransactionDto>>.Success(
+            new PagedResult<TransactionDto>(dtoItems, request.Page, request.PageSize, totalCount));
+    }
+
+    private async Task<TransferResponse> ProcessTransferAsync(TransferRequest request, CancellationToken cancellationToken)
+    {
+        TransferResponse? response = null;
+
+        await _unitOfWork.ExecuteInTransactionAsync(async ct =>
+        {
+            // Lock both wallets (ordered by Id) so no concurrent transfer touching either wallet can
+            // interleave with this one: prevents negative balances and double-spend under load.
+            var wallets = await _unitOfWork.LockWalletsAsync(new[] { request.FromWalletId, request.ToWalletId }, ct);
+
+            var fromWallet = wallets.FirstOrDefault(w => w.Id == request.FromWalletId)
+                ?? throw new WalletNotFoundException(request.FromWalletId);
+            var toWallet = wallets.FirstOrDefault(w => w.Id == request.ToWalletId)
+                ?? throw new WalletNotFoundException(request.ToWalletId);
+
+            if (!fromWallet.IsActive || !toWallet.IsActive)
+            {
+                throw new DomainException("Both wallets must be active to transfer funds.");
+            }
+
+            if (!string.Equals(fromWallet.Currency, toWallet.Currency, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new DomainException("Cross-currency transfers are not supported.");
+            }
+
+            // Daily outbound transfer limit, reset at midnight WAT, enforced server-side regardless of
+            // any client-supplied limit (CBN consumer-protection expectation).
+            var usageDate = WestAfricaTime.TodayWat();
+            var dailyUsage = await _unitOfWork.GetOrCreateDailyUsageForUpdateAsync(fromWallet.Id, usageDate, ct);
+
+            var attemptedTotal = dailyUsage.TotalTransferred + request.AmountKobo;
+            if (attemptedTotal > _options.DailyOutboundTransferLimitKobo)
+            {
+                throw new DailyTransferLimitExceededException(fromWallet.Id, _options.DailyOutboundTransferLimitKobo, attemptedTotal);
+            }
+
+            var fromBalanceBefore = fromWallet.Balance;
+            var toBalanceBefore = toWallet.Balance;
+
+            fromWallet.Debit(request.AmountKobo);
+            toWallet.Credit(request.AmountKobo);
+
+            _unitOfWork.Wallets.Update(fromWallet);
+            _unitOfWork.Wallets.Update(toWallet);
+
+            dailyUsage.AddTransfer(request.AmountKobo);
+            _unitOfWork.DailyTransferUsages.Update(dailyUsage);
+
+            var transferId = Guid.NewGuid();
+
+            var outTransaction = new WalletTransaction(
+                Guid.NewGuid(), fromWallet.Id, TransactionType.TransferOut, request.AmountKobo, fromWallet.Currency, toWallet.Id, request.Reference);
+            var inTransaction = new WalletTransaction(
+                Guid.NewGuid(), toWallet.Id, TransactionType.TransferIn, request.AmountKobo, toWallet.Currency, fromWallet.Id, request.Reference);
+
+            outTransaction.MarkCompleted();
+            inTransaction.MarkCompleted();
+
+            await _unitOfWork.WalletTransactions.AddAsync(outTransaction, ct);
+            await _unitOfWork.WalletTransactions.AddAsync(inTransaction, ct);
+
+            await _unitOfWork.AuditLogs.AddAsync(CreateAuditLog(
+                fromWallet.Id,
+                AuditOperation.Debited,
+                new { TransferId = transferId, AmountKobo = request.AmountKobo, BalanceBeforeKobo = fromBalanceBefore, BalanceAfterKobo = fromWallet.Balance, request.IdempotencyKey }), ct);
+
+            await _unitOfWork.AuditLogs.AddAsync(CreateAuditLog(
+                toWallet.Id,
+                AuditOperation.Credited,
+                new { TransferId = transferId, AmountKobo = request.AmountKobo, BalanceBeforeKobo = toBalanceBefore, BalanceAfterKobo = toWallet.Balance, request.IdempotencyKey }), ct);
+
+            await _unitOfWork.SaveChangesAsync(ct);
+
+            response = new TransferResponse(
+                transferId,
+                fromWallet.Id,
+                toWallet.Id,
+                request.AmountKobo,
+                fromWallet.Balance,
+                toWallet.Balance,
+                outTransaction.CompletedAtUtc ?? DateTime.UtcNow);
+        }, cancellationToken);
+
+        return response!;
+    }
+
+    private static string? ValidateTransferRequest(TransferRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.IdempotencyKey))
+        {
+            return "The Idempotency-Key header is required for transfers.";
+        }
+
+        if (request.FromWalletId == Guid.Empty || request.ToWalletId == Guid.Empty)
+        {
+            return "FromWalletId and ToWalletId are required.";
+        }
+
+        if (request.FromWalletId == request.ToWalletId)
+        {
+            return "Cannot transfer to the same wallet.";
+        }
+
+        if (request.AmountKobo <= 0)
+        {
+            return "Transfer amount must be positive.";
+        }
+
+        return null;
+    }
+
+    private static string ComputeRequestHash(TransferRequest request)
+    {
+        // Canonical, order-independent representation of the fields that define "the same request".
+        var canonical = $"{request.FromWalletId:N}|{request.ToWalletId:N}|{request.AmountKobo}|{request.Reference}";
+        var bytes = Encoding.UTF8.GetBytes(canonical);
+        var hash = SHA256.HashData(bytes);
+        return Convert.ToHexString(hash);
+    }
+
+    private static AuditLog CreateAuditLog(Guid walletId, AuditOperation operation, object details)
+    {
+        return new AuditLog(Guid.NewGuid(), walletId, nameof(Wallet), operation, JsonSerializer.Serialize(details));
+    }
+
+    private static decimal KoboToNaira(long amountKobo) => amountKobo / 100m;
+
+    private static WalletDto ToDto(Wallet wallet) => new(
+        wallet.Id, wallet.OwnerId, wallet.Balance, wallet.Currency, wallet.IsActive, wallet.CreatedAtUtc);
+
+    private static TransactionDto ToDto(WalletTransaction transaction) => new(
+        transaction.Id,
+        transaction.WalletId,
+        transaction.Type,
+        transaction.Status,
+        (long)transaction.Amount,
+        transaction.Currency,
+        transaction.RelatedWalletId,
+        transaction.Reference,
+        transaction.CreatedAtUtc,
+        transaction.CompletedAtUtc);
+}

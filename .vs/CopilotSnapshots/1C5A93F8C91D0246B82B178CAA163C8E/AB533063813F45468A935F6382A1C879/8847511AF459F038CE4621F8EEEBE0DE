@@ -1,0 +1,53 @@
+﻿using Microsoft.EntityFrameworkCore;
+using NovaWallet.Domain.Entities;
+using NovaWallet.Infrastructure.Persistence;
+
+namespace NovaWallet.Infrastructure.Repositories;
+
+public class WalletTransactionRepository(NovaWalletDbContext _dbContext) : IWalletTransactionRepository
+{
+    
+
+    public Task<WalletTransaction?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return _dbContext.WalletTransactions.FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<WalletTransaction>> GetByWalletIdAsync(Guid walletId, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.WalletTransactions
+            .Where(t => t.WalletId == walletId)
+            .OrderByDescending(t => t.CreatedAtUtc)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<(IReadOnlyList<WalletTransaction> Items, int TotalCount)> GetPagedByWalletIdAsync(
+        Guid walletId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _dbContext.WalletTransactions
+            .Where(t => t.WalletId == walletId)
+            .OrderByDescending(t => t.CreatedAtUtc);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return (items, totalCount);
+    }
+
+    public async Task AddAsync(WalletTransaction transaction, CancellationToken cancellationToken = default)
+    {
+        await _dbContext.WalletTransactions.AddAsync(transaction, cancellationToken);
+    }
+
+    public void Update(WalletTransaction transaction)
+    {
+        _dbContext.WalletTransactions.Update(transaction);
+    }
+}

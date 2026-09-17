@@ -1,0 +1,22 @@
+﻿using NovaWallet.Domain.Entities;
+
+namespace NovaWallet.Infrastructure.Repositories;
+        
+public interface IWalletTransactionRepository
+{
+    Task<WalletTransaction?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<WalletTransaction>> GetByWalletIdAsync(Guid walletId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Returns a page of the wallet's transaction history ordered newest-first, along with the total
+    /// number of matching records (for computing total pages on the caller side).
+    /// </summary>
+    Task<(IReadOnlyList<WalletTransaction> Items, int TotalCount)> GetPagedByWalletIdAsync(
+        Guid walletId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default);
+
+    Task AddAsync(WalletTransaction transaction, CancellationToken cancellationToken = default);
+    void Update(WalletTransaction transaction);
+}

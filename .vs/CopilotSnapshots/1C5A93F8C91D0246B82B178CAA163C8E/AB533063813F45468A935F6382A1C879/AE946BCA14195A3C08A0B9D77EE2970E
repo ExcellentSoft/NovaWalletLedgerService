@@ -1,0 +1,14 @@
+﻿namespace NovaWallet.Infrastructure.Persistence;
+
+using NovaWallet.Infrastructure.Repositories;
+
+public interface IUnitOfWork : IAsyncDisposable
+{
+    IWalletRepository Wallets { get; }
+    IWalletTransactionRepository WalletTransactions { get; }
+    IAuditLogRepository AuditLogs { get; }
+    IIdempotencyRecordRepository IdempotencyRecords { get; }
+    IDailyTransferUsageRepository DailyTransferUsages { get; }
+
+    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+}

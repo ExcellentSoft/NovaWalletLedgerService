@@ -1,0 +1,26 @@
+using Microsoft.EntityFrameworkCore;
+using NovaWallet.Domain.Entities;
+using NovaWallet.Infrastructure.Persistence;
+
+namespace NovaWallet.Infrastructure.Repositories;
+
+public class DailyTransferUsageRepository(NovaWalletDbContext _dbContext) : IDailyTransferUsageRepository
+{
+   // private readonly NovaWalletDbContext _dbContext = dbContext;
+
+    public Task<DailyTransferUsage?> GetByWalletIdAndDateAsync(Guid walletId, DateOnly date, CancellationToken cancellationToken = default)
+    {
+        return _dbContext.DailyTransferUsages
+            .FirstOrDefaultAsync(d => d.WalletId == walletId && d.UsageDate == date, cancellationToken);
+    }
+
+    public async Task AddAsync(DailyTransferUsage usage, CancellationToken cancellationToken = default)
+    {
+        await _dbContext.DailyTransferUsages.AddAsync(usage, cancellationToken);
+    }
+
+    public void Update(DailyTransferUsage usage)
+    {
+        _dbContext.DailyTransferUsages.Update(usage);
+    }
+}

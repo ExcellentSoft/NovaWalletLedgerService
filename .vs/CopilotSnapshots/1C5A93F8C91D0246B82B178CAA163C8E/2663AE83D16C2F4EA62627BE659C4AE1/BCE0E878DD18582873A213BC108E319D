@@ -1,0 +1,32 @@
+﻿using Microsoft.EntityFrameworkCore;
+using NovaWallet.Domain.Entities;
+
+namespace NovaWallet.Infrastructure.Persistence.Repositories;
+
+public class WalletTransactionRepository(NovaWalletDbContext dbContext) : IWalletTransactionRepository
+{
+    private readonly NovaWalletDbContext _dbContext = dbContext;
+
+    public Task<WalletTransaction?> GetByIdAsync
+    {
+        return _dbContext.WalletTransactions.FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<WalletTransaction>> GetByWalletIdAsync(Guid walletId, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.WalletTransactions
+            .Where(t => t.WalletId == walletId)
+            .OrderByDescending(t => t.CreatedAtUtc)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task AddAsync(WalletTransaction transaction, CancellationToken cancellationToken = default)
+    {
+        await _dbContext.WalletTransactions.AddAsync(transaction, cancellationToken);
+    }
+
+    public void Update(WalletTransaction transaction)
+    {
+        _dbContext.WalletTransactions.Update(transaction);
+    }
+}

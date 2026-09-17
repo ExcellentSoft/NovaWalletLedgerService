@@ -1,0 +1,39 @@
+﻿using NovaWallet.Domain.Enums;
+
+namespace NovaWallet.Domain.Entities;
+
+public class IdempotencyRecord
+{
+    public Guid Id { get; private set; }
+    public string Key { get; private set; }
+    public IdempotencyStatus Status { get; private set; }
+    public string? ResponsePayload { get; private set; }
+    public DateTime CreatedAtUtc { get; private set; }
+    public DateTime? CompletedAtUtc { get; private set; }
+
+    private IdempotencyRecord()
+    {
+        Key = string.Empty;
+    }
+
+    public IdempotencyRecord(Guid id, string key)
+    {
+        Id = id;
+        Key = key;
+        Status = IdempotencyStatus.InProgress;
+        CreatedAtUtc = DateTime.UtcNow;
+    }
+
+    public void Complete(string? responsePayload)
+    {
+        Status = IdempotencyStatus.Completed;
+        ResponsePayload = responsePayload;
+        CompletedAtUtc = DateTime.UtcNow;
+    }
+
+    public void Fail()
+    {
+        Status = IdempotencyStatus.Failed;
+        CompletedAtUtc = DateTime.UtcNow;
+    }
+}

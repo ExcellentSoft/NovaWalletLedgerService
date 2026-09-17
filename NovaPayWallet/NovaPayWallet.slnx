@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="NovaWallet.API/NovaWallet.API.csproj" />
+  <Project Path="NovaWallet.Application/NovaWallet.Application.csproj" />
+  <Project Path="NovaWallet.Domain/NovaWallet.Domain.csproj" />
+  <Project Path="NovaWallet.Infrastructure/NovaWallet.Infrastructure.csproj" />
+  <Project Path="Tests/NovaWallet.UnitTests/NovaWallet.UnitTests.csproj" />
+</Solution>

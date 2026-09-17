@@ -1,0 +1,10 @@
+﻿using NovaWallet.Domain.Entities;
+
+namespace NovaWallet.Infrastructure.Persistence.Repositories;
+
+public interface IDailyTransferUsageRepository
+{
+    Task<DailyTransferUsage?> GetByWalletIdAndDateAsync(Guid walletId, DateOnly date, CancellationToken cancellationToken = default);
+    Task AddAsync(DailyTransferUsage usage, CancellationToken cancellationToken = default);
+    void Update(DailyTransferUsage usage);
+}

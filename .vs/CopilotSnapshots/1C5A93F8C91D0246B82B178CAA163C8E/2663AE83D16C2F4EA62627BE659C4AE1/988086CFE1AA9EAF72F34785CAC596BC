@@ -1,0 +1,12 @@
+﻿using NovaWallet.Domain.Entities;
+
+namespace NovaWallet.Infrastructure.Persistence.Repositories;
+
+public interface IWalletRepository
+{
+    Task<Wallet?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<Wallet?> GetByOwnerIdAsync(Guid ownerId, CancellationToken cancellationToken = default);
+    Task AddAsync(Wallet wallet, CancellationToken cancellationToken = default);
+    void Update(Wallet wallet);
+    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+}

@@ -1,0 +1,25 @@
+using Microsoft.EntityFrameworkCore;
+using NovaWallet.Domain.Entities;
+using NovaWallet.Infrastructure.Persistence;
+
+namespace NovaWallet.Infrastructure.Repositories;
+
+public class IdempotencyRecordRepository(NovaWalletDbContext _dbContext) : IIdempotencyRecordRepository
+{
+    //private readonly NovaWalletDbContext _dbContext = dbContext;
+
+    public Task<IdempotencyRecord?> GetByKeyAsync(string key, CancellationToken cancellationToken = default)
+    {
+        return _dbContext.IdempotencyRecords.FirstOrDefaultAsync(r => r.Key == key, cancellationToken);
+    }
+
+    public async Task AddAsync(IdempotencyRecord record, CancellationToken cancellationToken = default)
+    {
+        await _dbContext.IdempotencyRecords.AddAsync(record, cancellationToken);
+    }
+
+    public void Update(IdempotencyRecord record)
+    {
+        _dbContext.IdempotencyRecords.Update(record);
+    }
+}
