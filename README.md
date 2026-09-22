@@ -64,7 +64,7 @@ Tests/NovaWallet.UnitTests  :  xUnit test project
 - .NET 9 SDK (for running locally without Docker)
 - Docker Desktop (for `docker compose up`)
 
-### Option A — Docker Compose (recommended)
+### Docker Compose
 
 From the `NovaPayWallet` folder (contains `docker-compose.yml`):
 
