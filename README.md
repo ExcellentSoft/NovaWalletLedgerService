@@ -64,7 +64,7 @@ Tests/NovaWallet.UnitTests  :  xUnit test project
 - .NET 9 SDK (for running locally without Docker)
 - Docker Desktop (for `docker compose up`)
 
-### Docker Compose
+### Option A — Docker Compose (recommended)
 
 From the `NovaPayWallet` folder (contains `docker-compose.yml`):
 
@@ -93,7 +93,7 @@ Stop everything with `docker compose down` (add `-v` to also drop the Postgres d
  Browse to the URL printed in the console (see `NovaWallet.API/Properties/launchSettings.json`)
    and append `/swagger`.
 
- ## Using the API
+### Using the API
 
 1. Get a token:
 
