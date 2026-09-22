@@ -1,5 +1,5 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
-WORKDIR /src
+WORKDIR /NovaPayWallet
 
 COPY NovaWallet.Domain/NovaWallet.Domain.csproj NovaWallet.Domain/
 COPY NovaWallet.Application/NovaWallet.Application.csproj NovaWallet.Application/
@@ -12,7 +12,7 @@ COPY NovaWallet.Application/ NovaWallet.Application/
 COPY NovaWallet.Infrastructure/ NovaWallet.Infrastructure/
 COPY NovaWallet.API/ NovaWallet.API/
 
-WORKDIR /src/NovaWallet.API
+WORKDIR /NovaPayWallet/NovaWallet.API
 RUN dotnet publish NovaWallet.API.csproj -c Release -o /app/publish --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final

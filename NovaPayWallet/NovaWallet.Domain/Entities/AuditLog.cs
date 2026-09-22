@@ -3,7 +3,7 @@ using NovaWallet.Domain.Enums;
 namespace NovaWallet.Domain.Entities;
 
 public class AuditLog
-{
+{ //Id, EntityId, EntityName, Operation, Details, PerformedByUserId, CreatedAtUtc
     public Guid Id { get; private set; }
     public Guid EntityId { get; private set; }
     public string EntityName { get; private set; }

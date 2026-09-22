@@ -5,7 +5,7 @@ namespace NovaWallet.Domain.Entities;
 
 public class Wallet
 {
-    
+    // 
     public Guid Id { get; private set; }
     public Guid OwnerId { get; private set; }
     public long Balance { get; private set; }
@@ -13,7 +13,7 @@ public class Wallet
     
     public DateTime CreatedAtUtc { get; private set; }
     public DateTime? UpdatedAtUtc { get; private set; }
-    public bool IsActive { get; private set; }
+    public bool IsActive { get; private set; } 
 
     private Wallet()
     {

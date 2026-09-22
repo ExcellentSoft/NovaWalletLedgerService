@@ -3,7 +3,7 @@ using NovaWallet.Domain.Enums;
 namespace NovaWallet.Domain.Entities;
 
 public class WalletTransaction
-{
+{ //Id, WalletId, Type, Status, Amount, Currency, RelatedWalletId, Reference, CreatedAtUtc, CompletedAtUtc
     public Guid Id { get; private set; }
     public Guid WalletId { get; private set; }
     public TransactionType Type { get; private set; }

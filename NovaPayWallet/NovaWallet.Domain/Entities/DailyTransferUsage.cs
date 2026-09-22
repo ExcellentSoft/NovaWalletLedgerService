@@ -5,13 +5,13 @@ public class DailyTransferUsage
     public Guid Id { get; private set; }
     public Guid WalletId { get; private set; }
     public DateOnly UsageDate { get; private set; }
-    public decimal TotalTransferred { get; private set; }
-
+    public long TotalTransferred { get; private set; }
+    //Id, WalletId, UsageDate, TotalTransferred
     private DailyTransferUsage()
     {
     }
 
-    public DailyTransferUsage(Guid id, Guid walletId, DateOnly usageDate, decimal totalTransferred = 0m)
+    public DailyTransferUsage(Guid id, Guid walletId, DateOnly usageDate, long totalTransferred = 0)
     {
         Id = id;
         WalletId = walletId;
@@ -19,7 +19,7 @@ public class DailyTransferUsage
         TotalTransferred = totalTransferred;
     }
 
-    public void AddTransfer(decimal amount)
+    public void AddTransfer(long amount)
     {
         TotalTransferred += amount;
     }

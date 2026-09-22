@@ -198,8 +198,8 @@ public class WalletService : IWalletService
             new PagedResult<TransactionDto>(dtoItems, request.Page, request.PageSize, totalCount));
     }
 
-    private async Task<TransferResponse> ProcessTransferAsync(TransferRequest request, CancellationToken cancellationToken)
-    {
+        private async Task<TransferResponse> ProcessTransferAsync(TransferRequest request, CancellationToken cancellationToken)
+        {
         TransferResponse? response = null;
 
         await _unitOfWork.ExecuteInTransactionAsync(async ct =>
@@ -240,8 +240,8 @@ public class WalletService : IWalletService
             fromWallet.Debit(request.AmountKobo);
             toWallet.Credit(request.AmountKobo);
 
-            _unitOfWork.Wallets.Update(fromWallet);
-            _unitOfWork.Wallets.Update(toWallet);
+            //_unitOfWork.Wallets.Update(fromWallet);
+            //_unitOfWork.Wallets.Update(toWallet);
 
             dailyUsage.AddTransfer(request.AmountKobo);
             _unitOfWork.DailyTransferUsages.Update(dailyUsage);

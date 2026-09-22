@@ -16,7 +16,7 @@ public class IdempotencyRecord
     public string? ResponsePayload { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
     public DateTime? CompletedAtUtc { get; private set; }
-
+    //Id, Key, RequestHash, Status, ResponsePayload, CreatedAtUtc, CompletedAtUtc
     private IdempotencyRecord()
     {
         Key = string.Empty;
