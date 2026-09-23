@@ -8,17 +8,17 @@ This is how I used AI for coding assistants.
 |---|---|
 | **GitHub Copilot (agent mode, Visual Studio)** | Primary assistant for day-to-day development/code implementation: Docker/build troubleshooting, and reviewing business logic in the Application and Infrastructure layers. |
 
-AI Copilo was interactively throughout the project and used for debugging,
+AI Copilot was interactively throughout the project and used for debugging,
 for scaffolding and reviewing the wallet transfer logic, and for writing developer-facing
-documentation. I make sure i reviewed every suggested code, tested, and corrected some where necessary before it is accepted.
+documentation. I make sure i reviewed every suggested code, tested, and corrected where necessary before it is been accepted.
  
 
-## Prompt log
+## Prompts
 
 ### 1. Implementing the Unit of Work with row-locking and transactional helpers
 
 **Prompt:**
-"Implement UnitOfWork for IUnitOfWork on top of NovaWalletDbContext. It needs to expose
+"Implement UnitOfWork for IUnitOfWork on top of NovaWalletDbContext. expose
  the repositories, a SaveChangesAsync, and an ExecuteInTransactionAsync that wraps an
  operation in a DB transaction using EF Core's execution strategy. Also add a LockWalletsAsync(IEnumerable<Guid> walletIds) that pessimistically
  locks the given wallet rows for update, in a way that avoids deadlocks when two transfers touch
@@ -105,7 +105,7 @@ public class UnitOfWork : IUnitOfWork
 **Outcome:** The code was Accepted with light reviews.
 
 
-### 2. Idempotent daily-usage row creation under concurrent inserts
+### 2. Daily-usage row creation under concurrent inserts
 
 **Prompt:**
 "Add GetOrCreateDailyUsageForUpdateAsync(Guid walletId, DateOnly usageDate) to UnitOfWork.
