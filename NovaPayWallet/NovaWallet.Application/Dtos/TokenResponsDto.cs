@@ -11,7 +11,7 @@ namespace NovaWallet.Application.Dtos
     public record TokenRequest(string? Subject);
 
     /// <summary>Bearer token response.</summary>
-    public record TokenResponse(string AccessToken, string TokenType, int ExpiresInSeconds);
+    public record TokenResponse(string AccessToken, string TokenType, int ExpiresInSeconds,Guid newCustomerId);
 
 }
 public class JwtOptions

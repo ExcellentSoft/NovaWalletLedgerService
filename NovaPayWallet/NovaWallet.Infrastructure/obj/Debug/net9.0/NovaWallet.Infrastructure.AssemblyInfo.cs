@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("NovaWallet.Infrastructure")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f575f9b36b9cffbfeb3354f5515e419689eb906d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c89f03414ea4a294f9de83a9b4865cf0adb99038")]
 [assembly: System.Reflection.AssemblyProductAttribute("NovaWallet.Infrastructure")]
 [assembly: System.Reflection.AssemblyTitleAttribute("NovaWallet.Infrastructure")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

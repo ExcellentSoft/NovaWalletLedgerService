@@ -5,8 +5,8 @@ namespace NovaWallet.Application.Dtos;
 public record TransactionDto(
     Guid Id,
     Guid WalletId,
-    TransactionType Type,
-    TransactionStatus Status,
+    TransactionType TransactionType,
+    TransactionStatus TransactionStatus,
     long AmountKobo,
     string Currency,
     Guid? RelatedWalletId,

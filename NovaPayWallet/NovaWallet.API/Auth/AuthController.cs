@@ -23,11 +23,11 @@ public class AuthController(IOptions<JwtOptions> jwtOptions) : ControllerBase
     public IActionResult IssueToken([FromBody] TokenRequest request)
     {
         var subject = string.IsNullOrWhiteSpace(request.Subject) ? Guid.NewGuid().ToString() : request.Subject;
-
+        var newCustomerId = Guid.NewGuid();
         var claims = new[]
         {
             new Claim(JwtRegisteredClaimNames.Sub, subject),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim(JwtRegisteredClaimNames.Jti, newCustomerId.ToString()),
             new Claim(ClaimTypes.Name, subject),
         };
 
@@ -42,8 +42,8 @@ public class AuthController(IOptions<JwtOptions> jwtOptions) : ControllerBase
             signingCredentials: creds);
 
         var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
-
-        return Ok(new TokenResponse(tokenString, "Bearer", _jwtOptions.ExpiryMinutes * 60));
+        // Assuming the subject is a valid GUID for customer ID
+        return Ok(new TokenResponse(tokenString, "Bearer", _jwtOptions.ExpiryMinutes * 60, newCustomerId));
     }
 }
 
