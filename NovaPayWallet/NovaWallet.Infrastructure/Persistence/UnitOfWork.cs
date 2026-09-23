@@ -12,12 +12,7 @@ public class UnitOfWork : IUnitOfWork
 
     private readonly NovaWalletDbContext _dbContext;
 
-    //private IWalletRepository? _wallets;
-    //private IWalletTransactionRepository? _walletTransactions;
-    //private IAuditLogRepository? _auditLogs;
-    //private IIdempotencyRecordRepository? _idempotencyRecords;
-    //private IDailyTransferUsageRepository? _dailyTransferUsages;
-
+    
     public UnitOfWork(NovaWalletDbContext dbContext)
     {
         _dbContext = dbContext;

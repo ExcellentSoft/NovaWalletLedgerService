@@ -22,7 +22,7 @@ public class JwtOptions
     public string Audience { get; set; } = "NovaWallet.API";
 
     /// <summary>Symmetric signing key. Must be at least 32 characters for HMAC-SHA256.</summary>
-    public string SigningKey { get; set; } = "novawallet-dev-signing-key-change-me-32chars";
+    public string SigningKey { get; set; } = "OERYUBiAQz1ZGp06TAWcdyvnVg_RL5eObFwyCG##@WITHJK";
 
     public int ExpiryMinutes { get; set; } = 60;
 }
